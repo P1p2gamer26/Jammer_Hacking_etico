@@ -8,8 +8,6 @@ trae impresos la protoboard.
 <p align="center">
   <img src="conexion_esp32_nrf24.svg" alt="Esquema de conexión ESP32 ↔ nRF24" width="90%">
   <br>
-  <img src="montaje_protoboard.svg" alt="Montaje en protoboard" width="90%">
-  <br>
   <img src="montaje_foto.png" alt="Foto del montaje" width="90%">
 </p>
 

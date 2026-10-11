@@ -61,7 +61,6 @@ docs/
   BRIEF_DASHBOARD.md          brief original del dashboard
   MONTAJE.md                  guía de montaje y cableado paso a paso
   conexion_esp32_nrf24.svg    esquema de conexión ESP32 ↔ nRF24
-  montaje_protoboard.svg      montaje en protoboard
   montaje_foto.png            foto del montaje real
   dashboard.png               captura del dashboard
   hero.svg                    banner animado
@@ -82,15 +81,13 @@ docs/
 Además: **LED** de estado en GPIO 2 y **botón** (a GND, con `INPUT_PULLUP`) en GPIO 33.
 
 > El esquema completo está en [`docs/conexion_esp32_nrf24.svg`](docs/conexion_esp32_nrf24.svg)
-> y el montaje en protoboard en [`docs/montaje_protoboard.svg`](docs/montaje_protoboard.svg).
+> y el montaje real en [`docs/montaje_foto.png`](docs/montaje_foto.png).
 > Alimentá el nRF24 con 3.3 V estables (y un condensador de desacoplo); el pin de 3.3 V del
 > ESP32 suele no dar suficiente corriente para la variante PA/LNA.
 
 ### Montaje en protoboard
 
 <p align="center">
-  <img src="docs/montaje_protoboard.svg" alt="Montaje en protoboard del ESP32 y el nRF24L01+" width="70%">
-  <br>
   <img src="docs/montaje_foto.png" alt="Foto del montaje real" width="70%">
 </p>
 
