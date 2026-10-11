@@ -35,7 +35,10 @@ Un banco de pruebas de radiofrecuencia de 2.4&nbsp;GHz montado sobre un **ESP32*
 transceptor **nRF24L01+ PA/LNA**. Expone tres piezas:
 
 - **Firmware (`rf_console`)** — una consola serial que escanea anuncios BLE (dirección,
-  RSSI y nombre) y gestiona una portadora continua sobre tres canales BLE.
+  RSSI y nombre), gestiona una portadora continua sobre tres canales BLE y hace un
+  **barrido pasivo de espectro** (126 canales) con el detector de energía del nRF24.
+- **Monitor de espectro** — el panel dibuja la ocupación por canal en 2.4&nbsp;GHz (modo `MON`),
+  útil para *observar* el ambiente y tus propias pruebas sin irradiar.
 - **Dashboard web** — un backend Python (`pyserial` → HTTP) y un frontend oscuro de una
   sola página que muestra los dispositivos detectados, su RSSI en vivo y permite enviar
   comandos al ESP32.
@@ -132,6 +135,7 @@ Comandos que acepta el firmware (por USB o reenviados por el dashboard):
 |--------------------|----------------------------------------------------|
 | `SCAN`             | inicia el escaneo BLE                              |
 | `NOSCAN` / `SCANOFF` | detiene el escaneo                              |
+| `MON` / `MONITOR`  | barrido pasivo de espectro (126 canales)           |
 | `J` / `JAM`        | activa barrido continuo 2402–2480 MHz (canales 2–80) en todas las radios |
 | `X` / `STOP`       | detiene jamming y escaneo                          |
 | `S` / `STATUS`     | imprime el modo actual (`IDLE`/`SCAN`/`JAM`)      |

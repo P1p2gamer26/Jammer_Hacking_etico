@@ -21,13 +21,17 @@ RECONNECT_MIN = float(os.environ.get("RF_RECONNECT_MIN", "1"))
 RECONNECT_MAX = float(os.environ.get("RF_RECONNECT_MAX", "10"))
 STATIC_DIR    = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
+MON_CANALES = 126
+
 state = {
     "connected": False,
     "port": SERIAL_PORT,
     "mode": "UNKNOWN",
     "devices": {},
     "log": [],
-    "counters": {"scan_cycles": 0, "devices_seen": 0, "total_seen": 0},
+    "counters": {"scan_cycles": 0, "devices_seen": 0, "total_seen": 0, "sweeps": 0},
+    "spectrum": {},
+    "mon_n": 0,
     "last_rx": 0.0,
 }
 lock = threading.Lock()
@@ -140,7 +144,22 @@ def handle_line(line):
             state["mode"] = line.split(" ", 1)[1].strip()
         elif line == "SCANEND":
             state["counters"]["scan_cycles"] += 1
+        elif line.startswith("CH "):
+            p = line.split()
+            if len(p) >= 3:
+                try:
+                    ch = int(p[1])
+                    hits = int(p[2])
+                    if len(p) >= 4:
+                        state["mon_n"] = int(p[3])
+                    if 0 <= ch < MON_CANALES:
+                        state["spectrum"][ch] = hits
+                except ValueError:
+                    pass
+        elif line == "SWEEPEND":
+            state["counters"]["sweeps"] += 1
     if (not line.startswith("DEV ") and line != "SCANEND"
+            and not line.startswith("CH ") and line != "SWEEPEND"
             and not line.startswith("PONG")):
         log(line)
 
@@ -221,7 +240,7 @@ def send_cmd(cmd, quiet=False):
             return False, str(exc)
 
 
-CMD_MAP = {"scan": "SCAN", "stop": "STOP", "jam": "JAM"}
+CMD_MAP = {"scan": "SCAN", "stop": "STOP", "jam": "JAM", "mon": "MON"}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -276,6 +295,8 @@ class Handler(BaseHTTPRequestHandler):
                     "devices": devs,
                     "log": state["log"][-60:],
                     "counters": state["counters"],
+                    "spectrum": [state["spectrum"].get(i) for i in range(MON_CANALES)],
+                    "mon_n": state["mon_n"],
                     "ports": [p.device for p in list_ports.comports()],
                 }
             self._send(200, payload)

@@ -160,6 +160,19 @@
   .stat .v { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--cyan); }
   .stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
 
+  button.mon { border-color: rgba(167,139,250,.5); color: #a78bfa; }
+  button.mon:hover:not(:disabled) { background: rgba(167,139,250,.14); box-shadow: 0 0 18px rgba(167,139,250,.3); }
+  .badge-mode.mon { color:#a78bfa; border-color: rgba(167,139,250,.5); background: rgba(167,139,250,.08); box-shadow: 0 0 18px rgba(167,139,250,.18); }
+
+  .spec-wrap { padding: 12px 14px; }
+  #spec { width: 100%; height: 150px; display: block; background: #0c1017; border-radius: 10px; border: 1px solid var(--border); }
+  .spec-legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 0 16px 14px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .spec-legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  .spec-legend .sw.low { background: #2a3242; }
+  .spec-legend .sw.mid { background: var(--cyan); }
+  .spec-legend .sw.high { background: var(--red-deep); }
+  .spec-legend .ble { color: #a78bfa; }
+
   .footnote { color: #5d6579; font-size: 11px; text-align: center; margin: 22px 0 8px; font-family: var(--mono); }
 </style>
 </head>
@@ -190,6 +203,10 @@
     <button id="btnScan" class="ctrl scan" onclick="sendCmd('scan')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       Escanear
+    </button>
+    <button id="btnMon" class="ctrl mon" onclick="sendCmd('mon')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 20h4v-6H3zM10 20h4V6h-4zM17 20h4V11h-4z"/></svg>
+      Monitor
     </button>
     <button id="btnJam" class="ctrl jam" onclick="confirmJam()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M19 5l-4 4M9 15l-4 4"/></svg>
@@ -225,6 +242,19 @@
       </section>
     </div>
   </div>
+
+  <section class="panel" style="margin-top:18px;">
+    <h2>Espectro 2.4 GHz · pasivo <span class="count" id="specInfo">—</span></h2>
+    <div class="spec-wrap">
+      <canvas id="spec"></canvas>
+    </div>
+    <div class="spec-legend">
+      <span><i class="sw low"></i> libre</span>
+      <span><i class="sw mid"></i> ocupado</span>
+      <span><i class="sw high"></i> saturado</span>
+      <span class="ble">▏canales BLE 2 / 26 / 80</span>
+    </div>
+  </section>
 
   <div class="footnote">Uso autorizado sobre equipos propios · herramienta educativa de seguridad</div>
 </div>
@@ -340,10 +370,43 @@
     var b = document.getElementById('badge');
     var m = (mode || 'UNKNOWN').toUpperCase();
     b.textContent = m;
-    b.className = 'badge-mode' + (m === 'SCAN' ? ' scan' : m === 'JAM' ? ' jam' : '');
-    document.getElementById('btnScan').disabled = (m === 'SCAN');
+    b.className = 'badge-mode' + (m === 'SCAN' ? ' scan' : m === 'JAM' ? ' jam' : m === 'MON' ? ' mon' : '');
+    document.getElementById('btnScan').disabled = (m === 'SCAN' || m === 'MON');
+    document.getElementById('btnMon').disabled  = (m === 'MON');
     document.getElementById('btnJam').disabled  = (m === 'JAM');
     document.getElementById('btnStop').disabled = (m === 'IDLE');
+  }
+
+  function drawSpectrum(spec, n) {
+    var cv = document.getElementById('spec');
+    if (!cv || !spec) return;
+    var dpr = window.devicePixelRatio || 1;
+    var cssW = cv.clientWidth || 900, cssH = 150;
+    if (cv.width !== Math.round(cssW * dpr) || cv.height !== Math.round(cssH * dpr)) {
+      cv.width = Math.round(cssW * dpr);
+      cv.height = Math.round(cssH * dpr);
+    }
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+    var N = spec.length, pad = 6, maxN = n || 6;
+    var w = (cssW - pad * 2) / N;
+    for (var i = 0; i < N; i++) {
+      var v = spec[i], h = 2, color = '#1a2230';
+      if (v != null) {
+        var f = Math.min(1, v / maxN);
+        h = f > 0 ? Math.max(3, f * (cssH - 20)) : 3;
+        color = f < 0.34 ? '#2a3242' : (f < 0.67 ? '#22d3ee' : '#ef4444');
+      }
+      ctx.fillStyle = color;
+      ctx.fillRect(pad + i * w, cssH - 8 - h, Math.max(1, w - 0.6), h);
+    }
+    ctx.fillStyle = '#3a4356';
+    ctx.fillRect(pad, cssH - 8, cssW - pad * 2, 1);
+    ctx.fillStyle = '#a78bfa';
+    [2, 26, 80].forEach(function(ch) {
+      if (ch < N) ctx.fillRect(pad + ch * w + w / 2 - 0.5, 8, 1, cssH - 16);
+    });
   }
 
   function setConn(connected, port) {
@@ -386,11 +449,24 @@
         document.getElementById('stDevices').textContent = (s.devices ? s.devices.length : 0);
         document.getElementById('stCycles').textContent = (c.scan_cycles != null ? c.scan_cycles : 0);
         document.getElementById('stPort').textContent = s.port || '—';
+        if (s.spectrum) {
+          window.__lastSpec = { s: s.spectrum, n: s.mon_n };
+          drawSpectrum(s.spectrum, s.mon_n);
+          var occ = s.spectrum.filter(function(v){ return v != null && v > 0; }).length;
+          var sweeps = (c.sweeps != null) ? c.sweeps : 0;
+          document.getElementById('specInfo').textContent =
+            (String(s.mode).toUpperCase() === 'MON' ? 'activo' : 'inactivo') +
+            ' · ' + sweeps + ' barridos · ' + occ + '/' + s.spectrum.length + ' ocupados';
+        }
       })
       .catch(function(){
         setConn(false, null);
       });
   }
+
+  window.addEventListener('resize', function(){
+    if (window.__lastSpec) drawSpectrum(window.__lastSpec.s, window.__lastSpec.n);
+  });
 
   poll();
   setInterval(poll, 1000);

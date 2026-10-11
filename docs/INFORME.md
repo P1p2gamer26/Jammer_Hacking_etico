@@ -66,3 +66,24 @@ cobertura mínima frente a un sistema que salta 1600 veces por segundo.
   lo grafica. Se ve el "ruido" y la afectación **observando**, sin atacar dispositivos.
 - Contraste con `tools/ble_scan.py` (RSSI vía `bleak`) para comparar lo que se ve con y sin
   portadora.
+
+## 8. Monitor pasivo (modo `MON`) y su limitación
+
+El firmware incorpora un **barrido pasivo** de los 126 canales (2400–2525 MHz) que mide
+energía con el bit **RPD** del nRF24 (umbral ≈ −64 dBm) y el panel lo dibuja como espectro.
+
+Configuración correcta (según datasheet y el *scanner* oficial de RF24):
+
+- Re-entrar en RX por canal: `stopListening()` → `setChannel()` → `startListening()` →
+  esperar ≥170&nbsp;µs → `testRPD()`. El RPD es un *latch* por periodo de escucha; si no se
+  re-entra en RX, se lee un valor obsoleto.
+- `setDataRate(RF24_1MBPS)` (a 250&nbsp;kbps el detector suele no disparar), `disableCRC()`,
+  `setAutoAck(false)`, `setAddressWidth(2)` y abrir 6 *pipes* con direcciones de ruido.
+- Acumular varias pasadas: el RPD es **1 bit** y su umbral varía ±5&nbsp;dB con la temperatura.
+
+> [!NOTE]
+> **Limitación observada.** En el módulo de prueba el barrido devolvió **0/126 canales
+> ocupados** de forma consistente. No significa que el aire esté limpio: es el comportamiento
+> típico de los **clones**, muy sensibles al ruido de la fuente, que a menudo reportan
+> `RPD = 0` de forma permanente. Mitigación: capacitor de **10–47&nbsp;µF** de baja ESR junto a
+> VCC/GND, alimentación **lineal** (no conmutada), cables cortos y bajar la potencia del PA.
