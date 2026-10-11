@@ -60,6 +60,7 @@ tools/
 docs/
   BRIEF_DASHBOARD.md          brief original del dashboard
   MONTAJE.md                  guía de montaje y cableado paso a paso
+  INFORME.md                  por qué el jam no afecta a audífonos Bluetooth
   conexion_esp32_nrf24.svg    esquema de conexión ESP32 ↔ nRF24
   montaje_foto.png            foto del montaje real
   dashboard.png               captura del dashboard
