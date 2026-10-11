@@ -6,15 +6,17 @@
 #define PIN_BOTON 33
 #define PIN_LED   2
 
+#define CH_SWEEP_LOW  2
+#define CH_SWEEP_HIGH 80
+#define PLL_DWELL_US  150
+
 SPIClass *spiBus = nullptr;
 
 RF24 radio(22, 21, 16000000);
 
-const byte BLE_CH[] = {2, 26, 80};
-const byte N_BLE     = 3;
-
 bool jamming = false;
 bool botonPrevio = HIGH;
+byte hopIdx = 0;
 
 void configurarRadio() {
   radio.setAutoAck(false);
@@ -24,7 +26,7 @@ void configurarRadio() {
   radio.setDataRate(RF24_2MBPS);
   radio.setCRCLength(RF24_CRC_DISABLED);
   radio.setAddressWidth(3);
-  radio.startConstCarrier(RF24_PA_MAX, BLE_CH[0]);
+  radio.startConstCarrier(RF24_PA_MAX, CH_SWEEP_LOW);
 }
 
 void setup() {
@@ -61,8 +63,13 @@ void setup() {
         jamming = !jamming;
         if (jamming) {
           configurarRadio();
+          hopIdx = CH_SWEEP_LOW;
           digitalWrite(PIN_LED, HIGH);
-          Serial.println("JAMMING ON  (canales BLE 2/26/80)");
+          Serial.print("JAMMING ON  (barrido ");
+          Serial.print(2400 + CH_SWEEP_LOW);
+          Serial.print("-");
+          Serial.print(2400 + CH_SWEEP_HIGH);
+          Serial.println(" MHz)");
         } else {
           radio.powerDown();
           digitalWrite(PIN_LED, LOW);
@@ -70,6 +77,12 @@ void setup() {
         }
       }
       prev = ahora;
+    }
+    if (jamming) {
+      radio.setChannel(hopIdx);
+      delayMicroseconds(PLL_DWELL_US);
+      hopIdx++;
+      if (hopIdx > CH_SWEEP_HIGH) hopIdx = CH_SWEEP_LOW;
     }
   }
 }

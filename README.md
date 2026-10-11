@@ -62,6 +62,7 @@ docs/
   MONTAJE.md                  guía de montaje y cableado paso a paso
   conexion_esp32_nrf24.svg    esquema de conexión ESP32 ↔ nRF24
   montaje_protoboard.svg      montaje en protoboard
+  montaje_foto.png            foto del montaje real
   dashboard.png               captura del dashboard
   hero.svg                    banner animado
 ```
@@ -89,6 +90,8 @@ Además: **LED** de estado en GPIO 2 y **botón** (a GND, con `INPUT_PULLUP`) en
 
 <p align="center">
   <img src="docs/montaje_protoboard.svg" alt="Montaje en protoboard del ESP32 y el nRF24L01+" width="70%">
+  <br>
+  <img src="docs/montaje_foto.png" alt="Foto del montaje real" width="70%">
 </p>
 
 El ESP32 va **fuera** de la protoboard y se conecta con jumpers hembra-macho; el nRF24
@@ -131,7 +134,7 @@ Comandos que acepta el firmware (por USB o reenviados por el dashboard):
 |--------------------|----------------------------------------------------|
 | `SCAN`             | inicia el escaneo BLE                              |
 | `NOSCAN` / `SCANOFF` | detiene el escaneo                              |
-| `J` / `JAM`        | activa la portadora en los canales BLE 2/26/80    |
+| `J` / `JAM`        | activa barrido continuo 2402–2480 MHz (canales 2–80) en todas las radios |
 | `X` / `STOP`       | detiene jamming y escaneo                          |
 | `S` / `STATUS`     | imprime el modo actual (`IDLE`/`SCAN`/`JAM`)      |
 | `PING`             | responde `PONG`                                    |
@@ -139,6 +142,34 @@ Comandos que acepta el firmware (por USB o reenviados por el dashboard):
 
 Salida relevante: `DEV <mac> <rssi> <nombre>` por cada anuncio BLE, `MODE <estado>`,
 `SCANEND` al cerrar un ciclo de escaneo. El pulsador en GPIO 33 alterna el jamming sin PC.
+
+## Modos y configuración de jamming
+
+El firmware `rf_console` expone estas opciones en tiempo de compilación (defines al inicio de `rf_console.ino`):
+
+| Define          | Valor por defecto | Descripción                                                                 |
+|-----------------|-------------------|-----------------------------------------------------------------------------|
+| `RADIO2_PINS`   | `0`               | `1` = habilita un 2º nRF24L01+ en bus HSPI (ver cableado abajo)            |
+| `WIFI_JAM`      | `0`               | `1` = emite ruido wideband experimental con el WiFi del ESP32 (ver nota)   |
+| `CH_SWEEP_LOW`  | `2`               | Canal nRF24 inicial del barrido (2 = 2402 MHz, límite bajo BT)             |
+| `CH_SWEEP_HIGH` | `80`              | Canal nRF24 final del barrido (80 = 2480 MHz, límite alto BT)              |
+| `PLL_DWELL_US`  | `150`             | µs de asentamiento del PLL tras cada salto de canal                        |
+
+### Cableado 2º nRF24L01+ (HSPI)
+
+| nRF24L01+ | ESP32 (HSPI) |
+|-----------|--------------|
+| CE        | GPIO 26      |
+| CSN       | GPIO 27      |
+| SCK       | GPIO 14      |
+| MOSI      | GPIO 13      |
+| MISO      | GPIO 12      |
+| VCC       | 3.3 V externos |
+| GND       | GND          |
+
+> **Nota sobre `WIFI_JAM`**: es **experimental**. Usa `esp_wifi_80211_tx` para inyectar tramas 802.11 crudas en los canales 1, 6 y 11. La API (`wifi_ieee80211_pkt_t`, `esp_wifi_80211_tx`) puede variar según la versión del core ESP32 Arduino; si no compila, desactívalo (`#define WIFI_JAM 0`) o adapta el bloque `#if WIFI_JAM` al core instalado.
+
+El sketch `jammer_ble` (solo botón, sin BLE ni serial) usa un barrido idéntico de 80 canales (2–80, `PLL_DWELL_US=150`) con una única radio; no expone `RADIO2_PINS` ni `WIFI_JAM`.
 
 ### API del dashboard
 
