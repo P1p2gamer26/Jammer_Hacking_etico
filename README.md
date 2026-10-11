@@ -28,6 +28,9 @@
 > cercanos. Úsala **solo** sobre equipos propios, en un entorno aislado (jaula de Faraday
 > o distancia controlada) y con autorización explícita. Quien lo ejecute es el único
 > responsable del cumplimiento de la normativa local de espectro radioeléctrico.
+>
+> Antes de operar, seguí la **[guía de laboratorio seguro](docs/LABORATORIO.md)** y medí
+> primero con el **monitor pasivo** (modo `MON`).
 
 ## ¿Qué es?
 
@@ -64,8 +67,10 @@ docs/
   BRIEF_DASHBOARD.md          brief original del dashboard
   MONTAJE.md                  guía de montaje y cableado paso a paso
   INFORME.md                  por qué el jam no afecta a audífonos Bluetooth
+  LABORATORIO.md              guía de laboratorio seguro (uso responsable)
   conexion_esp32_nrf24.svg    esquema de conexión ESP32 ↔ nRF24
-  montaje_foto.png            foto del montaje real
+  montaje_protoboard.svg      montaje en protoboard
+  laboratorio.svg             diagrama de entorno controlado
   dashboard.png               captura del dashboard
   hero.svg                    banner animado
 ```

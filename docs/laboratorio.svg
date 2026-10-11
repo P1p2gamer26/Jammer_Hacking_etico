@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 400" width="860" height="400" font-family="ui-sans-serif, system-ui, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d1220"/>
+      <stop offset="1" stop-color="#0b0e14"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="860" height="400" fill="url(#bg)"/>
+  <text x="30" y="42" fill="#e6eaf2" font-size="19" font-weight="700">Laboratorio controlado 2.4 GHz</text>
+  <text x="30" y="63" fill="#8b93a7" font-size="12">Pruebas solo sobre equipos propios, con autorización explícita</text>
+
+  <!-- Jaula de Faraday -->
+  <rect x="60" y="95" width="470" height="230" rx="18" fill="#10161f" stroke="#22d3ee" stroke-width="1.6" stroke-dasharray="7 6"/>
+  <text x="78" y="120" fill="#22d3ee" font-size="12" font-weight="700">JAULA / caja apantallada (opcional pero ideal)</text>
+
+  <!-- DUT -->
+  <rect x="95" y="160" width="150" height="70" rx="10" fill="#161b27" stroke="#202636"/>
+  <text x="170" y="190" fill="#e6eaf2" font-size="13" text-anchor="middle" font-weight="700">Equipo propio</text>
+  <text x="170" y="208" fill="#8b93a7" font-size="11" text-anchor="middle">(DUT, tuyo)</text>
+
+  <!-- ESP32 -->
+  <rect x="360" y="160" width="150" height="70" rx="10" fill="#161b27" stroke="#202636"/>
+  <text x="435" y="190" fill="#e6eaf2" font-size="13" text-anchor="middle" font-weight="700">ESP32 + nRF24</text>
+  <text x="435" y="208" fill="#8b93a7" font-size="11" text-anchor="middle">banco de pruebas</text>
+
+  <!-- enlace -->
+  <line x1="245" y1="195" x2="360" y2="195" stroke="#22d3ee" stroke-width="2"/>
+  <polygon points="352,190 362,195 352,200" fill="#22d3ee"/>
+  <text x="302" y="185" fill="#22d3ee" font-size="11" text-anchor="middle">2.4 GHz</text>
+
+  <!-- atenuador -->
+  <rect x="95" y="258" width="415" height="46" rx="10" fill="#0c1017" stroke="#202636"/>
+  <text x="302" y="279" fill="#a78bfa" font-size="12" text-anchor="middle" font-weight="700">Distancia controlada / atenuador</text>
+  <text x="302" y="295" fill="#8b93a7" font-size="11" text-anchor="middle">acercá solo lo necesario para ver el efecto</text>
+
+  <!-- Fuera -->
+  <rect x="565" y="95" width="265" height="230" rx="18" fill="#12161d" stroke="#202636"/>
+  <text x="585" y="120" fill="#8b93a7" font-size="12" font-weight="700">FUERA DEL RECINTO</text>
+
+  <circle cx="595" cy="158" r="7" fill="#34d399"/>
+  <text x="612" y="163" fill="#e6eaf2" font-size="12">Nada que no sea tuyo</text>
+  <text x="612" y="180" fill="#8b93a7" font-size="11">sin terceros en el rango</text>
+
+  <circle cx="595" cy="212" r="7" fill="#fbbf24"/>
+  <text x="612" y="217" fill="#e6eaf2" font-size="12">Wi-Fi / BLE vecinos</text>
+  <text x="612" y="234" fill="#8b93a7" font-size="11">fuera del recinto o apantallados</text>
+
+  <circle cx="595" cy="266" r="7" fill="#f87171"/>
+  <text x="612" y="271" fill="#e6eaf2" font-size="12">Aire libre / vía pública</text>
+  <text x="612" y="288" fill="#8b93a7" font-size="11">no se opera acá</text>
+
+  <text x="30" y="372" fill="#5d6579" font-size="11">Uso educativo · interferir comunicaciones ajenas es ilegal (CRC/ANE, FCC)</text>
+</svg>
