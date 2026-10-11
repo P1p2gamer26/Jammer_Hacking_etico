@@ -59,6 +59,7 @@ tools/
   ble_scan.py                 escáner BLE de escritorio (bleak)
 docs/
   BRIEF_DASHBOARD.md          brief original del dashboard
+  MONTAJE.md                  guía de montaje y cableado paso a paso
   conexion_esp32_nrf24.svg    esquema de conexión ESP32 ↔ nRF24
   montaje_protoboard.svg      montaje en protoboard
   dashboard.png               captura del dashboard
@@ -83,6 +84,17 @@ Además: **LED** de estado en GPIO 2 y **botón** (a GND, con `INPUT_PULLUP`) en
 > y el montaje en protoboard en [`docs/montaje_protoboard.svg`](docs/montaje_protoboard.svg).
 > Alimentá el nRF24 con 3.3 V estables (y un condensador de desacoplo); el pin de 3.3 V del
 > ESP32 suele no dar suficiente corriente para la variante PA/LNA.
+
+### Montaje en protoboard
+
+<p align="center">
+  <img src="docs/montaje_protoboard.svg" alt="Montaje en protoboard del ESP32 y el nRF24L01+" width="70%">
+</p>
+
+El ESP32 va **fuera** de la protoboard y se conecta con jumpers hembra-macho; el nRF24
+**nunca** se enchufa directo (sus dos filas de pines quedarían puenteadas). Guía paso a paso
+—cómo ubicar los 8 pines del módulo, la tabla completa de jumpers, el orden de armado y la
+alimentación— en **[`docs/MONTAJE.md`](docs/MONTAJE.md)**.
 
 ## Puesta en marcha
 
