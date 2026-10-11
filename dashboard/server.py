@@ -11,11 +11,15 @@ except ImportError:
     print("Falta pyserial. Ejecuta: python -m pip install pyserial")
     raise
 
-SERIAL_PORT = os.environ.get("RF_PORT", "COM3")
-BAUD        = 115200
-WEB_PORT    = int(os.environ.get("RF_WEB_PORT", "8080"))
-DEV_TTL     = float(os.environ.get("RF_DEV_TTL", "15"))
-STATIC_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+SERIAL_PORT   = os.environ.get("RF_PORT", "COM3")
+BAUD          = 115200
+WEB_PORT      = int(os.environ.get("RF_WEB_PORT", "8080"))
+DEV_TTL       = float(os.environ.get("RF_DEV_TTL", "15"))
+HEARTBEAT     = float(os.environ.get("RF_HEARTBEAT", "10"))
+LINK_TIMEOUT  = float(os.environ.get("RF_LINK_TIMEOUT", "30"))
+RECONNECT_MIN = float(os.environ.get("RF_RECONNECT_MIN", "1"))
+RECONNECT_MAX = float(os.environ.get("RF_RECONNECT_MAX", "10"))
+STATIC_DIR    = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 state = {
     "connected": False,
@@ -23,7 +27,8 @@ state = {
     "mode": "UNKNOWN",
     "devices": {},
     "log": [],
-    "counters": {"scan_cycles": 0, "devices_seen": 0},
+    "counters": {"scan_cycles": 0, "devices_seen": 0, "total_seen": 0},
+    "last_rx": 0.0,
 }
 lock = threading.Lock()
 ser = None
@@ -114,14 +119,19 @@ def handle_line(line):
                 except ValueError:
                     rssi = 0
                 name = parts[3].strip() if len(parts) > 3 else ""
-                d = state["devices"].get(addr) or {
-                    "addr": addr, "name": "", "rssi": rssi, "history": [],
-                }
+                now = time.time()
+                d = state["devices"].get(addr)
+                if d is None:
+                    d = {
+                        "addr": addr, "name": "", "rssi": rssi, "history": [],
+                        "first_seen": now,
+                    }
+                    state["counters"]["total_seen"] += 1
                 if name:
                     d["name"] = name
                 d["rssi"] = rssi
                 d.update(classify_device(addr, d.get("name", "")))
-                d["last_seen"] = time.time()
+                d["last_seen"] = now
                 d["history"].append(rssi)
                 d["history"] = d["history"][-80:]
                 state["devices"][addr] = d
@@ -130,26 +140,50 @@ def handle_line(line):
             state["mode"] = line.split(" ", 1)[1].strip()
         elif line == "SCANEND":
             state["counters"]["scan_cycles"] += 1
-    if not line.startswith("DEV ") and line != "SCANEND":
+    if (not line.startswith("DEV ") and line != "SCANEND"
+            and not line.startswith("PONG")):
         log(line)
+
+
+def resolve_port():
+    ports = [p.device for p in list_ports.comports()]
+    if SERIAL_PORT in ports:
+        return SERIAL_PORT
+    if ports:
+        return ports[0]
+    return SERIAL_PORT
 
 
 def reader_loop():
     global ser
+    backoff = RECONNECT_MIN
     while True:
         try:
-            if ser is None:
-                with ser_lock:
-                    ser = serial.Serial(SERIAL_PORT, BAUD, timeout=1)
-                with lock:
-                    state["connected"] = True
-                log(f"Conectado a {SERIAL_PORT} @ {BAUD}")
-            raw = ser.readline()
-            if not raw:
-                continue
-            line = raw.decode("utf-8", "replace").strip()
-            if line:
-                handle_line(line)
+            port = resolve_port()
+            with ser_lock:
+                ser = serial.Serial(port, BAUD, timeout=1)
+            with lock:
+                state["connected"] = True
+                state["port"] = port
+                state["last_rx"] = time.time()
+            log(f"Conectado a {port} @ {BAUD}")
+            backoff = RECONNECT_MIN
+            while True:
+                raw = ser.readline()
+                now = time.time()
+                if raw:
+                    with lock:
+                        state["last_rx"] = now
+                    line = raw.decode("utf-8", "replace").strip()
+                    if line:
+                        handle_line(line)
+                else:
+                    with lock:
+                        idle = now - state.get("last_rx", now)
+                    if state["connected"] and idle > LINK_TIMEOUT:
+                        raise IOError(
+                            f"sin respuesta del dispositivo ({idle:.0f}s)"
+                        )
         except Exception as exc:
             with lock:
                 state["connected"] = False
@@ -161,16 +195,27 @@ def reader_loop():
                 except Exception:
                     pass
                 ser = None
-            time.sleep(2)
+            time.sleep(backoff)
+            backoff = min(backoff * 2, RECONNECT_MAX)
 
 
-def send_cmd(cmd):
+def heartbeat_loop():
+    while True:
+        time.sleep(HEARTBEAT)
+        with lock:
+            connected = state["connected"]
+        if connected:
+            send_cmd("PING", quiet=True)
+
+
+def send_cmd(cmd, quiet=False):
     with ser_lock:
         if not ser:
             return False, "no hay conexion serial"
         try:
             ser.write((cmd + "\n").encode("ascii"))
-            log(f">> {cmd}")
+            if not quiet:
+                log(f">> {cmd}")
             return True, "ok"
         except Exception as exc:
             return False, str(exc)
@@ -217,13 +262,17 @@ class Handler(BaseHTTPRequestHandler):
                 for d in state["devices"].values():
                     dd = dict(d)
                     dd["age"] = round(now - d.get("last_seen", now), 1)
+                    dd["last_seen_str"] = time.strftime(
+                        "%H:%M:%S", time.localtime(d.get("last_seen", now)))
                     devs.append(dd)
                 devs.sort(key=lambda x: x["rssi"], reverse=True)
                 state["counters"]["devices_seen"] = len(state["devices"])
+                link_age = round(now - state["last_rx"], 1) if state["last_rx"] else None
                 payload = {
                     "connected": state["connected"],
                     "port": state["port"],
                     "mode": state["mode"],
+                    "link_age": link_age,
                     "devices": devs,
                     "log": state["log"][-60:],
                     "counters": state["counters"],
@@ -255,7 +304,13 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     threading.Thread(target=reader_loop, daemon=True).start()
-    srv = ThreadingHTTPServer(("127.0.0.1", WEB_PORT), Handler)
+    threading.Thread(target=heartbeat_loop, daemon=True).start()
+    try:
+        srv = ThreadingHTTPServer(("127.0.0.1", WEB_PORT), Handler)
+    except OSError as exc:
+        print(f"\n  No se pudo abrir el puerto {WEB_PORT}: {exc}")
+        print("  ¿Ya hay otro dashboard corriendo? Probá RF_WEB_PORT=8081\n")
+        return
     log(f"Dashboard en http://localhost:{WEB_PORT}")
     print(f"\n  Dashboard listo ->  http://localhost:{WEB_PORT}")
     print(f"  Puerto serial   ->  {SERIAL_PORT}\n")
