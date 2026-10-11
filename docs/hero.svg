@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 240" width="1200" height="240" role="img" aria-label="RF Console - Laboratorio RF 2.4 GHz">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0e14"/>
+      <stop offset="1" stop-color="#0d1420"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#22d3a8"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="240" fill="url(#bg)"/>
+
+  <!-- rejilla sutil -->
+  <g stroke="#1b2535" stroke-width="1" opacity="0.5">
+    <line x1="0" y1="60" x2="1200" y2="60"/>
+    <line x1="0" y1="120" x2="1200" y2="120"/>
+    <line x1="0" y1="180" x2="1200" y2="180"/>
+  </g>
+
+  <!-- ondas de radio pulsando desde la antena -->
+  <g fill="none" stroke="#22d3ee" stroke-width="2" filter="url(#glow)">
+    <circle cx="150" cy="120" r="20" opacity="0">
+      <animate attributeName="r" values="20;120" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="150" cy="120" r="20" opacity="0">
+      <animate attributeName="r" values="20;120" dur="3s" begin="1s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0" dur="3s" begin="1s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="150" cy="120" r="20" opacity="0">
+      <animate attributeName="r" values="20;120" dur="3s" begin="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0" dur="3s" begin="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- torre/antena -->
+  <g stroke="#22d3a8" stroke-width="3" filter="url(#glow)">
+    <line x1="150" y1="120" x2="150" y2="170"/>
+    <line x1="150" y1="120" x2="134" y2="104"/>
+    <line x1="150" y1="120" x2="166" y2="104"/>
+  </g>
+  <circle cx="150" cy="120" r="5" fill="#22d3ee" filter="url(#glow)"/>
+
+  <!-- barras de espectro ondulando -->
+  <g filter="url(#glow)">
+    <rect x="360" y="150" width="14" height="40" rx="3" fill="url(#bar)">
+      <animate attributeName="height" values="20;90;35;60;20" dur="2.4s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="170;100;155;130;170" dur="2.4s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="384" y="150" width="14" height="40" rx="3" fill="url(#bar)">
+      <animate attributeName="height" values="60;30;95;45;60" dur="2.1s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="130;160;95;145;130" dur="2.1s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="408" y="150" width="14" height="40" rx="3" fill="url(#bar)">
+      <animate attributeName="height" values="40;100;25;80;40" dur="2.7s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="150;90;165;110;150" dur="2.7s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="432" y="150" width="14" height="40" rx="3" fill="url(#bar)">
+      <animate attributeName="height" values="85;35;70;25;85" dur="1.9s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="105;155;120;165;105" dur="1.9s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="456" y="150" width="14" height="40" rx="3" fill="url(#bar)">
+      <animate attributeName="height" values="30;75;50;95;30" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="160;115;140;95;160" dur="2.5s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="480" y="150" width="14" height="40" rx="3" fill="url(#bar)">
+      <animate attributeName="height" values="55;25;90;40;55" dur="2.2s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="135;165;100;150;135" dur="2.2s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="504" y="150" width="14" height="40" rx="3" fill="url(#bar)">
+      <animate attributeName="height" values="70;45;30;85;70" dur="2.8s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="120;145;160;105;120" dur="2.8s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="528" y="150" width="14" height="40" rx="3" fill="url(#bar)">
+      <animate attributeName="height" values="35;95;60;25;35" dur="2.0s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="155;95;130;165;155" dur="2.0s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- texto -->
+  <text x="610" y="110" font-family="'Segoe UI',Arial,sans-serif" font-size="52" font-weight="700" fill="#e6f6ff">RF&#160;Console</text>
+  <text x="612" y="150" font-family="'Consolas','JetBrains Mono',monospace" font-size="20" fill="#22d3a8">ESP32 + nRF24L01+ PA/LNA &#183; 2.4&#160;GHz lab</text>
+  <text x="612" y="182" font-family="'Consolas','JetBrains Mono',monospace" font-size="15" fill="#5b7089">escaner BLE &#183; consola serial &#183; dashboard web</text>
+
+  <!-- barrido de linea del escaner -->
+  <line x1="610" y1="200" x2="610" y2="200" stroke="#22d3ee" stroke-width="2" opacity="0.6" filter="url(#glow)">
+    <animate attributeName="x2" values="610;1160;610" dur="4s" repeatCount="indefinite"/>
+  </line>
+</svg>

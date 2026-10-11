@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RF Console — Panel</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7' fill='%2322d3ee'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #11151f;
+    --panel-2: #161b27;
+    --border: #202636;
+    --text: #e6eaf2;
+    --muted: #8b93a7;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --cyan: #22d3ee;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --red-deep: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    color: var(--text);
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #141b2b 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #10161f 0%, transparent 55%),
+      var(--bg);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  header.topbar {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    padding: 16px 20px;
+    background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, #0f2733, #122033);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+  }
+  .brand h1 { font-size: 17px; margin: 0; font-weight: 700; letter-spacing: .3px; }
+  .brand .sub { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+
+  .conn { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 0 rgba(248,113,113,.5); }
+  .dot.ok { background: var(--green); box-shadow: 0 0 10px rgba(52,211,153,.7); }
+
+  .spacer { flex: 1; }
+
+  .badge-mode {
+    font-family: var(--mono); font-weight: 700; letter-spacing: 1px;
+    font-size: 20px; padding: 10px 22px; border-radius: 12px;
+    border: 1px solid var(--border); background: #1b2130; color: var(--muted);
+    transition: all .3s ease; text-transform: uppercase;
+  }
+  .badge-mode.scan { color: var(--cyan); border-color: rgba(34,211,238,.5); background: rgba(34,211,238,.08); box-shadow: 0 0 18px rgba(34,211,238,.18); }
+  .badge-mode.jam  { color: #fff; border-color: rgba(239,68,68,.6); background: rgba(239,68,68,.15); box-shadow: 0 0 22px rgba(239,68,68,.35); animation: jampulse 1.1s ease-in-out infinite; }
+  @keyframes jampulse {
+    0%,100% { box-shadow: 0 0 10px rgba(239,68,68,.25); }
+    50%     { box-shadow: 0 0 28px rgba(239,68,68,.6); }
+  }
+
+  /* Layout */
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; margin: 18px 0; }
+  button.ctrl {
+    font-family: var(--sans); font-weight: 600; font-size: 15px;
+    padding: 14px 26px; border-radius: 12px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    transition: transform .08s ease, background .2s ease, box-shadow .2s ease, opacity .2s ease;
+    display: inline-flex; align-items: center; gap: 9px;
+  }
+  button.ctrl:hover:not(:disabled) { background: #1d2434; }
+  button.ctrl:active:not(:disabled) { transform: scale(.96); }
+  button.ctrl:disabled { opacity: .4; cursor: not-allowed; }
+  button.scan { border-color: rgba(34,211,238,.4); color: var(--cyan); }
+  button.scan:hover:not(:disabled) { box-shadow: 0 0 16px rgba(34,211,238,.25); }
+  button.jam  { border-color: rgba(239,68,68,.5); color: var(--red); background: rgba(239,68,68,.06); }
+  button.jam:hover:not(:disabled) { background: rgba(239,68,68,.14); box-shadow: 0 0 18px rgba(239,68,68,.3); }
+  button.stop { border-color: rgba(251,191,36,.4); color: var(--amber); }
+
+  .grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden;
+  }
+  .panel h2 {
+    margin: 0; padding: 14px 18px; font-size: 13px; font-weight: 600;
+    letter-spacing: .5px; text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;
+  }
+  .panel h2 .count { margin-left: auto; font-family: var(--mono); color: var(--cyan); }
+
+  /* Devices */
+  .devs { padding: 8px; display: flex; flex-direction: column; gap: 8px; max-height: 640px; overflow-y: auto; }
+  .dev {
+    display: grid; grid-template-columns: 1fr auto auto; gap: 10px 16px; align-items: center;
+    padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--panel-2);
+  }
+  .dev.new { animation: fadein .35s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .dev .mac { font-family: var(--mono); font-size: 14px; font-weight: 500; }
+  .dev .name { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .chip {
+    display: inline-block; margin-top: 6px; font-family: var(--mono); font-size: 11px;
+    padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+    border: 1px solid rgba(34,211,238,.35); color: var(--cyan); background: rgba(34,211,238,.07);
+  }
+  .chip.unknown { border-color: var(--border); color: var(--muted); background: transparent; }
+  .chip .vendor { color: var(--muted); }
+  .dev .meta { display: flex; align-items: center; gap: 14px; grid-column: 1 / -1; margin-top: 2px; }
+  .rssi { font-family: var(--mono); font-weight: 700; font-size: 15px; min-width: 62px; text-align: right; }
+  .rssi.strong { color: var(--green); }
+  .rssi.medium { color: var(--amber); }
+  .rssi.weak   { color: var(--red); }
+  .age { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 22px; }
+  .bars span { width: 5px; background: #2a3242; border-radius: 1px; }
+  .bars span.on.strong { background: var(--green); }
+  .bars span.on.medium { background: var(--amber); }
+  .bars span.on.weak   { background: var(--red); }
+  .bars span:nth-child(1){height:30%} .bars span:nth-child(2){height:48%}
+  .bars span:nth-child(3){height:66%} .bars span:nth-child(4){height:84%}
+  .bars span:nth-child(5){height:100%}
+
+  .spark { opacity: .9; }
+
+  .empty { padding: 48px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+
+  /* Log */
+  .log {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+    padding: 12px 14px; height: 300px; overflow-y: auto; white-space: pre-wrap;
+    color: #b9c1d4; background: #0c1017;
+  }
+  .log .line { padding: 1px 0; }
+
+  /* Stats */
+  .stats { padding: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
+  .stat .v { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--cyan); }
+  .stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+
+  .footnote { color: #5d6579; font-size: 11px; text-align: center; margin: 22px 0 8px; font-family: var(--mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M4.9 16.1a10 10 0 0 1 0-8.2M19.1 7.9a10 10 0 0 1 0 8.2M7.8 13.2a6 6 0 0 1 0-2.4M16.2 10.8a6 6 0 0 1 0 2.4"/>
+          <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <div>
+        <h1>RF Console</h1>
+        <div class="sub">ESP32 + nRF24 · demo educativa</div>
+      </div>
+    </div>
+    <div class="conn">
+      <span id="dot" class="dot"></span>
+      <span id="connText">desconectado</span>
+    </div>
+    <div class="spacer"></div>
+    <div id="badge" class="badge-mode">—</div>
+  </header>
+
+  <div class="controls">
+    <button id="btnScan" class="ctrl scan" onclick="sendCmd('scan')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      Escanear
+    </button>
+    <button id="btnJam" class="ctrl jam" onclick="confirmJam()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M19 5l-4 4M9 15l-4 4"/></svg>
+      JAM
+    </button>
+    <button id="btnStop" class="ctrl stop" onclick="sendCmd('stop')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+      Detener
+    </button>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Dispositivos detectados <span class="count" id="devCount">0</span></h2>
+      <div id="devs" class="devs">
+        <div class="empty">Sin dispositivos… presioná Escanear</div>
+      </div>
+    </section>
+
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <section class="panel">
+        <h2>Estadísticas</h2>
+        <div class="stats">
+          <div class="stat"><div class="v" id="stDevices">0</div><div class="k">Dispositivos</div></div>
+          <div class="stat"><div class="v" id="stCycles">0</div><div class="k">Ciclos scan</div></div>
+          <div class="stat"><div class="v" id="stPort">—</div><div class="k">Puerto</div></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Consola</h2>
+        <div id="log" class="log"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="footnote">Uso autorizado sobre equipos propios · herramienta educativa de seguridad</div>
+</div>
+
+<script>
+  function rssiClass(r) {
+    if (r >= -60) return 'strong';
+    if (r >= -80) return 'medium';
+    return 'weak';
+  }
+  function barsCount(r) {
+    // -30 fuerte -> 5 barras, -100 débil -> 1
+    var pct = (r + 100) / 70; // 0..1
+    return Math.max(1, Math.min(5, Math.round(pct * 5)));
+  }
+  function sparkline(hist) {
+    if (!hist || !hist.length) return '';
+    var w = 80, h = 22, min = -100, max = -30;
+    var n = hist.length;
+    var pts = hist.map(function(v, i) {
+      var x = n === 1 ? w : (i / (n - 1)) * w;
+      var cl = Math.max(min, Math.min(max, v));
+      var y = h - ((cl - min) / (max - min)) * h;
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    }).join(' ');
+    var last = hist[hist.length - 1];
+    var color = ({strong:'#34d399', medium:'#fbbf24', weak:'#f87171'})[rssiClass(last)];
+    return '<svg class="spark" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+      '<polyline fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="' + pts + '"/></svg>';
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+
+  var devEls = {};
+
+  function buildDevEl() {
+    var el = document.createElement('div');
+    el.className = 'dev new';
+    el.innerHTML =
+      '<div><div class="mac"></div><div class="name"></div><span class="chip"></span></div>' +
+      '<div class="bars"><span></span><span></span><span></span><span></span><span></span></div>' +
+      '<div class="rssi"></div>' +
+      '<div class="meta"><span class="age"></span><span class="spark"></span></div>';
+    return el;
+  }
+
+  function updateDevEl(el, d) {
+    var cls = rssiClass(d.rssi);
+    var nb = barsCount(d.rssi);
+    el.querySelector('.mac').textContent = d.addr || '';
+    el.querySelector('.name').textContent = (d.name && d.name.trim()) ? d.name : '—';
+    var tipo = (d.type && d.type !== 'Desconocido') ? d.type : 'Desconocido';
+    var chip = el.querySelector('.chip');
+    chip.className = (tipo === 'Desconocido') ? 'chip unknown' : 'chip';
+    chip.textContent = tipo + (d.vendor ? ' · ' + d.vendor : '');
+    var bars = el.querySelectorAll('.bars span');
+    for (var i = 0; i < bars.length; i++) bars[i].className = (i < nb ? 'on ' + cls : '');
+    var r = el.querySelector('.rssi');
+    r.textContent = d.rssi + ' dBm';
+    r.className = 'rssi ' + cls;
+    el.querySelector('.age').textContent = (typeof d.age === 'number') ? 'hace ' + d.age.toFixed(1) + 's' : '';
+    el.querySelector('.spark').innerHTML = sparkline(d.history);
+  }
+
+  function renderDevices(devices) {
+    var container = document.getElementById('devs');
+    document.getElementById('devCount').textContent = devices ? devices.length : 0;
+    var list = devices ? devices.slice() : [];
+    if (!list.length) {
+      Object.keys(devEls).forEach(function(k){ devEls[k].remove(); delete devEls[k]; });
+      if (!container.querySelector('.empty')) {
+        container.innerHTML = '<div class="empty">Sin dispositivos… presioná Escanear</div>';
+      }
+      return;
+    }
+    var empty = container.querySelector('.empty');
+    if (empty) empty.remove();
+    list.sort(function(a, b){
+      var t = String(a.type || '').localeCompare(String(b.type || ''));
+      return t !== 0 ? t : String(a.addr || '').localeCompare(String(b.addr || ''));
+    });
+    var seen = {};
+    list.forEach(function(d) {
+      var el = devEls[d.addr];
+      if (!el) { el = buildDevEl(); devEls[d.addr] = el; }
+      updateDevEl(el, d);
+      seen[d.addr] = true;
+    });
+    Object.keys(devEls).forEach(function(k){ if (!seen[k]) { devEls[k].remove(); delete devEls[k]; } });
+    list.forEach(function(d) {
+      var el = devEls[d.addr];
+      if (el) container.appendChild(el);
+    });
+  }
+
+  var lastLogSig = '';
+  function renderLog(lines) {
+    var el = document.getElementById('log');
+    if (!lines) return;
+    var tail = lines.slice(-50);
+    var sig = tail.join('\n');
+    if (sig === lastLogSig) return;
+    lastLogSig = sig;
+    var atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+    el.innerHTML = tail.map(function(l){ return '<div class="line">' + esc(l) + '</div>'; }).join('');
+    if (atBottom) el.scrollTop = el.scrollHeight;
+  }
+
+  function setMode(mode) {
+    var b = document.getElementById('badge');
+    var m = (mode || 'UNKNOWN').toUpperCase();
+    b.textContent = m;
+    b.className = 'badge-mode' + (m === 'SCAN' ? ' scan' : m === 'JAM' ? ' jam' : '');
+    document.getElementById('btnScan').disabled = (m === 'SCAN');
+    document.getElementById('btnJam').disabled  = (m === 'JAM');
+    document.getElementById('btnStop').disabled = (m === 'IDLE');
+  }
+
+  function setConn(connected, port) {
+    var dot = document.getElementById('dot');
+    var txt = document.getElementById('connText');
+    if (connected) {
+      dot.className = 'dot ok';
+      txt.textContent = port ? port : 'conectado';
+    } else {
+      dot.className = 'dot';
+      txt.textContent = 'desconectado';
+    }
+  }
+
+  function confirmJam() {
+    if (confirm('¿Activar JAM (2.4 GHz)?\nSolo sobre equipos propios o con autorización explícita.')) {
+      sendCmd('jam');
+    }
+  }
+
+  function sendCmd(cmd) {
+    fetch('/api/command', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cmd: cmd })
+    }).then(function(r){ return r.json(); })
+      .then(function(){ poll(); })
+      .catch(function(){});
+  }
+
+  function poll() {
+    fetch('/api/state')
+      .then(function(r){ if (!r.ok) throw new Error('bad'); return r.json(); })
+      .then(function(s){
+        setConn(!!s.connected, s.port);
+        setMode(s.mode);
+        renderDevices(s.devices);
+        renderLog(s.log);
+        var c = s.counters || {};
+        document.getElementById('stDevices').textContent = (s.devices ? s.devices.length : 0);
+        document.getElementById('stCycles').textContent = (c.scan_cycles != null ? c.scan_cycles : 0);
+        document.getElementById('stPort').textContent = s.port || '—';
+      })
+      .catch(function(){
+        setConn(false, null);
+      });
+  }
+
+  poll();
+  setInterval(poll, 1000);
+</script>
+</body>
+</html>
